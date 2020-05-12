@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "612076521167",
+    "firebase_url": "https://wherenext-2b07e.firebaseio.com",
+    "project_id": "wherenext-2b07e",
+    "storage_bucket": "wherenext-2b07e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612076521167:android:84b65050a3a0b664c499ba",
+        "android_client_info": {
+          "package_name": "com.example.wherenextapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "612076521167-cjku2cs2fbe1fijbcqm5tkvl74bc2g3o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByqzihQvaE6y26ZwYmqJlgvB-DVrC14ws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "612076521167-cjku2cs2fbe1fijbcqm5tkvl74bc2g3o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "612076521167-7rt6fofqk8iu5isq1vk31dcdttvn1jlv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.wherenextapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
