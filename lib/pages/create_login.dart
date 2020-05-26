@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/services.dart';
+import 'package:wherenextapp/menu_frame.dart';
+import 'package:wherenextapp/services/database.dart';
+import '../user.dart';
+import 'home_page.dart';
 
 class CreateLogin extends StatefulWidget {
   final Function cancelBackToHome;
@@ -15,52 +21,78 @@ class CreateLogin extends StatefulWidget {
 class _CreateLoginState extends State<CreateLogin> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String name, email, password, passwordConfirm;
-  bool _termsAgreed = false;
   bool saveAttempted = false;
   final formKey = GlobalKey<FormState>();
   void _createUser({String email, String password}) {
+    User user = new User();
     _auth
         .createUserWithEmailAndPassword(email: email, password: password)
-        .then((authResult) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
-        return Container(
-          color: Colors.blue,
-          child: Text('Welcome ${authResult.user.email}'),
-        );
-      }));
+        .then((authResult) async {
+      user.uid = authResult.user.uid;
+      user.email = authResult.user.email;
+      user.name = name;
+     String _returnString = await OurDatabase().createUser(user);
+     if(_returnString == "success") {
+       Navigator.pushReplacement(
+         context,
+         MaterialPageRoute(builder: (context) => MenuFrame()),
+       );
+     }
+
     }).catchError((err) {
       print(err.code);
-      if (err.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
-        showCupertinoDialog(
-            context: context,
-            builder: (context) {
-              return CupertinoAlertDialog(
-                title: Text(
-                    'This email already has an account associated with it'),
-                actions: <Widget>[
-                  CupertinoDialogAction(
-                    child: Text('OK'),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  )
-                ],
-              );
-            });
+      if (Platform.isIOS) {
+        if (err.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
+          showCupertinoDialog(
+              context: context,
+              builder: (context) {
+                return CupertinoAlertDialog(
+                  title: Text(
+                      'Šis el. paštas jau naudojamas su kita paskyra'),
+                  actions: <Widget>[
+                    CupertinoDialogAction(
+                      child: Text('OK'),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    )
+                  ],
+                );
+              });
+        }
+      } else {
+        if (err.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text(
+                      'Šis el. paštas jau naudojamas su kita paskyra'),
+                  actions: <Widget>[
+                    FlatButton(
+                      child: Text('OK'),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    )
+                  ],
+                );
+              });
+        }
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Form(
+    return new Form(
       key: formKey,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           children: <Widget>[
             Text(
-              'CREATE YOUR LOGIN',
+              'REGISTRACIJA',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 26.0,
@@ -79,7 +111,7 @@ class _CreateLoginState extends State<CreateLogin> {
               },
               validator: (nameValue) {
                 if (nameValue.isEmpty) {
-                  return 'This field is mandatory';
+                  return 'Šis laukas privalomas';
                 }
                 return null;
               },
@@ -91,7 +123,7 @@ class _CreateLoginState extends State<CreateLogin> {
                     borderSide: BorderSide(
                   color: Colors.white,
                 )),
-                hintText: 'Enter Name',
+                hintText: 'Įveskite vardą',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
                 focusColor: Colors.white,
               ),
@@ -112,12 +144,12 @@ class _CreateLoginState extends State<CreateLogin> {
               },
               validator: (emailValue) {
                 if (emailValue.isEmpty) {
-                  return 'This field is mandatory';
+                  return 'Šis laukas privalomas';
                 }
                 if ((EmailValidator.validate(emailValue))) {
                   return null;
                 }
-                return 'Email is not valid';
+                return 'El. paštas negalimas';
               },
               decoration: InputDecoration(
                 errorStyle: TextStyle(
@@ -127,7 +159,7 @@ class _CreateLoginState extends State<CreateLogin> {
                     borderSide: BorderSide(
                   color: Colors.white,
                 )),
-                hintText: 'Enter Email',
+                hintText: 'Įveskite el. paštą',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
                 focusColor: Colors.white,
               ),
@@ -148,10 +180,10 @@ class _CreateLoginState extends State<CreateLogin> {
               },
               validator: (pswValue) {
                 if (pswValue.isEmpty) {
-                  return 'This field is mandatory';
+                  return 'Šis laukas privalomas';
                 }
                 if (pswValue.length < 8) {
-                  return 'Password must be at least 8 characters';
+                  return 'Slaptažodis turi būti sudarytas iš 8 simbolių';
                 }
                 return null;
               },
@@ -164,7 +196,7 @@ class _CreateLoginState extends State<CreateLogin> {
                     borderSide: BorderSide(
                   color: Colors.white,
                 )),
-                hintText: 'Password',
+                hintText: 'Slaptažodis',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
                 focusColor: Colors.white,
               ),
@@ -185,7 +217,7 @@ class _CreateLoginState extends State<CreateLogin> {
               },
               validator: (pswConfirmValue) {
                 if (pswConfirmValue != password) {
-                  return 'Passwords must match';
+                  return 'Slaptažodžiai turi sutapti';
                 }
                 return null;
               },
@@ -198,7 +230,7 @@ class _CreateLoginState extends State<CreateLogin> {
                     borderSide: BorderSide(
                   color: Colors.white,
                 )),
-                hintText: 'Re-Enter Password',
+                hintText: 'Pakartokite slaptažodį',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
                 focusColor: Colors.white,
               ),
@@ -207,32 +239,8 @@ class _CreateLoginState extends State<CreateLogin> {
                 fontSize: 18.0,
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Checkbox(
-                  activeColor: Colors.indigo,
-                  value: _termsAgreed,
-                  onChanged: (newValue) {
-                    setState(() {
-                      _termsAgreed = newValue;
-                    });
-                  },
-                ),
-                SizedBox(
-                  height: 12.0,
-                ),
-                Text(
-                  'Agreed to Terms & Conditions',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16.0,
-                  ),
-                )
-              ],
-            ),
             SizedBox(
-              height: 12.0,
+              height: 30.0,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -242,10 +250,10 @@ class _CreateLoginState extends State<CreateLogin> {
                     widget.cancelBackToHome();
                   },
                   child: Text(
-                    'CANCEL',
+                    'ATŠAUKTI',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18.0,
+                      fontSize: 14.0,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -266,7 +274,7 @@ class _CreateLoginState extends State<CreateLogin> {
                   child: Container(
                     padding: EdgeInsets.symmetric(
                       vertical: 17.0,
-                      horizontal: 55.0,
+                      horizontal: 40.0,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -275,23 +283,16 @@ class _CreateLoginState extends State<CreateLogin> {
                       ),
                     ),
                     child: Text(
-                      'SAVE',
+                      'REGISTRUOTIS',
                       style: TextStyle(
                         color: Color.fromRGBO(31, 114, 239, 1.0),
-                        fontSize: 18.0,
+                        fontSize: 14.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
               ],
-            ),
-            SizedBox(
-              height: 12.0,
-            ),
-            Text(
-              'Agree to Terms & Conditions',
-              style: TextStyle(color: Colors.white),
             ),
           ],
         ),

@@ -12,7 +12,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'WhereNext',
       theme: ThemeData(
-        primaryColor: Colors.white,
       ),
       home: MenuFrame(),
     );
