@@ -6,12 +6,13 @@ import '../pages/event_page.dart';
 class EventCard extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => new EventCardController();
-  bool remove = false;
+  String action;
   bool leave = false;
   bool _canEdit = false;
   String _name;
   String _description;
   String _documentID;
+  String currentUid;
 
   onTap(BuildContext context) {
     Navigator.of(context).push(new MaterialPageRoute(
@@ -30,8 +31,8 @@ class EventCard extends StatefulWidget {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  _createTile(context, "Ištrinti įvykį", Icons.remove_circle,
-                      true, _removeEvent),
+                  _createTile(
+                      context, "Ištrinti įvykį", Icons.remove_circle, "remove"),
                 ],
               );
             })
@@ -41,31 +42,31 @@ class EventCard extends StatefulWidget {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  _createTile(context, "palikti įvykį", Icons.remove_circle,
-                      true, _leaveEvent),
+                  _createTile(
+                      context, "palikti įvykį", Icons.remove_circle, "leave"),
                 ],
               );
             });
 //
   }
 
-  _removeEvent() {
-    print('remove event');
-    remove = true;
-  }
+//  _removeEvent() {
+//    print('remove event');
+//    remove = true;
+//  }
 
-  _leaveEvent() {
-    print('remove event');
-    leave = true;
-  }
+//  _leaveEvent() {
+//    print('remove event');
+//    leave = true;
+//  }
 
-  confirm(BuildContext context) async {
+  confirm(BuildContext context, String action, String title) async {
     return showDialog(
         context: context,
         barrierDismissible: true,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("Tikrai norite ištrinti įvykį"),
+            title: Text(title),
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[Text('$_name')],
@@ -79,7 +80,10 @@ class EventCard extends StatefulWidget {
               FlatButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  removeConfirmed();
+                  if (action == "leave") {
+                    leaveConfirmed();
+                  } else
+                    removeConfirmed();
                 },
                 child: Text("Taip"),
               )
@@ -92,46 +96,23 @@ class EventCard extends StatefulWidget {
     Firestore.instance.collection("įvykiai").document(_documentID).delete();
   }
 
-  showAlertDialog(BuildContext context) {
-    // set up the buttons
-    Widget cancelButton = FlatButton(
-      child: Text("Cancel"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-    );
-    Widget continueButton = FlatButton(
-      child: Text("Continue"),
-      onPressed: () {
-        print("confiming");
-        Navigator.pop(context);
-        removeConfirmed();
-      },
-    );
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("AlertDialog"),
-      content: Text(
-          "Would you like to continue learning how to use Flutter alerts?"),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
+  void leaveConfirmed()  {
 
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
+    Firestore.instance
+        .collection("įvykiai")
+        .document(_documentID)
+        .collection("dalyviai")
+        .document(currentUid)
+        .delete();
+
+    removeFromArray();
+
   }
 
-  ListTile _createTile(BuildContext context, String name, IconData icon,
-      bool remove, Function action) {
-    switch (remove) {
-      case true:
+  ListTile _createTile(
+      BuildContext context, String name, IconData icon, String action) {
+    switch (action) {
+      case "remove":
         return ListTile(
           leading: Icon(icon),
           title: Text(
@@ -142,19 +123,22 @@ class EventCard extends StatefulWidget {
           ),
           onTap: () async {
 //            Navigator.pop(context);
-            await confirm(context);
+            await confirm(context, action, "Tikrai norite ištrinti įvykį");
             Navigator.pop(context);
           },
         );
-      case false:
+      case "leave":
         return ListTile(
           leading: Icon(icon),
           title: Text(
             name,
+            style: new TextStyle(
+              color: Colors.red,
+            ),
           ),
-          onTap: () {
+          onTap: () async {
+            await confirm(context, action, "Tikrai norite palikti įvykį");
             Navigator.pop(context);
-            action();
           },
         );
     }
@@ -165,9 +149,21 @@ class EventCard extends StatefulWidget {
       ),
       onTap: () {
         Navigator.pop(context);
-        action();
       },
     );
+  }
+
+  removeFromArray() async {
+
+    DocumentReference docRef =
+    Firestore.instance.collection("įvykiai").document(_documentID);
+    DocumentSnapshot doc = await docRef.get();
+    List members = doc.data['dalyviai'];
+    if (members.contains(currentUid) == true) {
+      docRef.updateData({
+        'dalyviai': FieldValue.arrayRemove([currentUid])
+      });
+    }
   }
 
   EventCard(this._name, this._description, this._documentID);
@@ -182,6 +178,10 @@ class EventCardController extends State<EventCard> {
 
   void adminPrivileges() async {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    setState(() {
+      widget.currentUid = user.uid;
+    });
+
     Firestore.instance
         .document(
             "įvykiai/" + widget._documentID + "/administratoriai/" + user.uid)

@@ -65,8 +65,6 @@ class EventGuestListCardState extends State<EventGuestListCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   new Text(name),
-                  _createTile(context, "message", Icons.message, false,
-                      _removeFromEvent),
                   _createTile(
                       context, "pridėti", Icons.add, false, _addToAdmins),
                   _createTile(context, "pašalinti iš grupės",
