@@ -7,7 +7,9 @@ class EventGuestPage extends StatefulWidget {
   State<StatefulWidget> createState() => new EventGuestPageState();
 
   final String _eventID;
-  EventGuestPage(this._eventID);
+  final bool _isAdmin;
+  final String _currentUid;
+  EventGuestPage(this._eventID, this._isAdmin, this._currentUid);
 }
 
 class EventGuestPageState extends State<EventGuestPage> {
@@ -33,7 +35,10 @@ class EventGuestPageState extends State<EventGuestPage> {
                       children: snapshot.data.documents
                           .map((DocumentSnapshot document) {
                         return new EventGuestListCard(
-                            document.documentID, document.data["dalyvauja"]);
+                            widget._currentUid,
+                            widget._isAdmin,
+                            document.documentID,
+                            document.data["dalyvauja"]);
                       }).toList(),
                     );
                   },

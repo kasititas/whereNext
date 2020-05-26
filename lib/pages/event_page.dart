@@ -13,6 +13,7 @@ class EventPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => new EventPageState();
 
+  String currentUserID;
   String _eventID;
   bool _canEdit = false;
   bool _canAddGuests = false;
@@ -30,6 +31,7 @@ class EventPage extends StatefulWidget {
 
 class EventPageState extends State<EventPage>
     with SingleTickerProviderStateMixin {
+
   String userId;
   String _warning;
   TabController controller;
@@ -222,6 +224,9 @@ class EventPageState extends State<EventPage>
 
   void adminPrivileges() async {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    setState(() {
+      widget.currentUserID = user.uid;
+    });
     Firestore.instance
         .document(
             "įvykiai/" + widget._eventID + "/administratoriai/" + user.uid)
@@ -243,7 +248,7 @@ class EventPageState extends State<EventPage>
           fabItems = [];
 
           if (widget._canEdit) fabItems.add(editFABItem);
-          if (widget._canAddGuests) fabItems.add(addGuestFABItem);
+//          if (widget._canAddGuests) fabItems.add(addGuestFABItem);
         });
       }
     });
@@ -280,7 +285,7 @@ class EventPageState extends State<EventPage>
           controller: controller,
           children: <Widget>[
             new EventMainTabPage(widget._eventID),
-            new EventGuestPage(widget._eventID),
+            new EventGuestPage(widget._eventID, widget._canAddGuests, widget.currentUserID),
           ],
         ),
         bottomNavigationBar: new Material(
