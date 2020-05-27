@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
           stream: Firestore.instance
               .collection('įvykiai')
               .where('dalyviai', arrayContains: widget.user.uid)
-              .orderBy("pradžios-laikas", descending: true)
+              .orderBy("pradžios-laikas")
               .snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {

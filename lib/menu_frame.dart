@@ -13,7 +13,6 @@ import 'package:wherenextapp/user.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
-// ignore: must_be_immutable
 class MenuFrame extends StatelessWidget {
   void ensureIfAlreadyLogedIn(BuildContext context) async {
     User _currentUser = new User();
@@ -22,7 +21,6 @@ class MenuFrame extends StatelessWidget {
       _currentUser = await OurDatabase().getUserInfo(_firebaseUser.uid);
       if (_currentUser != null) {
         print(_currentUser.toString());
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePage(null, _currentUser)),

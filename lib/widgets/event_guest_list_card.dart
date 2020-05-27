@@ -1,14 +1,18 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventGuestListCard extends StatefulWidget {
   State<StatefulWidget> createState() => new EventGuestListCardState();
-
+  String _eventID;
   String _currentUid;
   String _guestUserID;
   bool _going;
   bool _isAdmin;
   EventGuestListCard(
+      this._eventID,
       this._currentUid, this._isAdmin, this._guestUserID, this._going);
 }
 
@@ -52,7 +56,7 @@ class EventGuestListCardState extends State<EventGuestListCard> {
             children: <Widget>[
               new Text(name),
               _createTile(context, "palikti įvykį",
-                  Icons.remove_circle, true, _leaveEvent),
+                  Icons.remove_circle, "leave"),
             ],
           );
         })
@@ -66,9 +70,9 @@ class EventGuestListCardState extends State<EventGuestListCard> {
                 children: <Widget>[
                   new Text(name),
                   _createTile(
-                      context, "pridėti", Icons.add, false, _addToAdmins),
-                  _createTile(context, "pašalinti iš grupės",
-                      Icons.remove_circle, true, _removeFromEvent),
+                      context, "pridėti", Icons.add, "add"),
+                  _createTile(context, "pašalinti iš įvykio",
+                      Icons.remove_circle, "remove"),
                 ],
               );
             })
@@ -85,7 +89,7 @@ class EventGuestListCardState extends State<EventGuestListCard> {
                         ),
                       ),
                       _createTile(context, "palikti įvykį", Icons.remove_circle,
-                          true, _leaveEvent),
+                           "leave"),
                     ],
                   );
                 })
@@ -108,10 +112,36 @@ class EventGuestListCardState extends State<EventGuestListCard> {
                 });
   }
 
+  void leaveConfirmed(String uid)  {
+
+    Firestore.instance
+        .collection("įvykiai")
+        .document(widget._eventID)
+        .collection("dalyviai")
+        .document(uid)
+        .delete();
+
+    removeFromArray(uid);
+
+  }
+
+  removeFromArray(String uid) async {
+
+    DocumentReference docRef =
+    Firestore.instance.collection("įvykiai").document(widget._eventID);
+    DocumentSnapshot doc = await docRef.get();
+    List members = doc.data['dalyviai'];
+    if (members.contains(uid) == true) {
+      docRef.updateData({
+        'dalyviai': FieldValue.arrayRemove([uid])
+      });
+    }
+  }
+
   ListTile _createTile(BuildContext context, String name, IconData icon,
-      bool remove, Function action) {
-    switch (remove) {
-      case true:
+      String action) {
+    switch(action) {
+      case "leave":
         return ListTile(
           leading: Icon(icon),
           title: Text(
@@ -120,33 +150,80 @@ class EventGuestListCardState extends State<EventGuestListCard> {
               color: Colors.red,
             ),
           ),
-          onTap: () {
+          onTap: () async{
+            await confirm(context, action, "Tikrai norite palikti įvykį", widget._currentUid);
             Navigator.pop(context);
-            action();
           },
         );
-      case false:
+      case "remove":
+        return ListTile(
+          leading: Icon(icon),
+          title: Text(
+            name,
+            style: new TextStyle(
+              color: Colors.red,
+            ),
+          ),
+          onTap: () async{
+            await confirm(context, action, "Tikrai norite ištrinti svečią", widget._guestUserID);
+            Navigator.pop(context);
+          },
+        );
+      case "add":
         return ListTile(
           leading: Icon(icon),
           title: Text(
             name,
           ),
           onTap: () {
+//            await confirm(context, action, "Tikrai norite ištrinti sveičią");
             Navigator.pop(context);
-            action();
           },
         );
     }
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(
-        name,
-      ),
-      onTap: () {
-        Navigator.pop(context);
-        action();
-      },
-    );
+  }
+
+  confirm(BuildContext context, String action, String title, String uid) async {
+    var retVal;
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          Platform.isIOS?
+          retVal = CupertinoAlertDialog(
+            title: Text(title),
+            actions: <Widget>[
+              CupertinoButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Atšaukti"),
+              ),
+              CupertinoButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                    leaveConfirmed(uid);
+                },
+                child: Text("Taip"),
+              )
+            ],
+          ):
+          retVal = AlertDialog(
+            title: Text(title),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Atšaukti"),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                    leaveConfirmed(uid);
+                },
+                child: Text("Taip"),
+              )
+            ],
+          );
+          return retVal;
+        });
   }
 
   _removeFromEvent() {

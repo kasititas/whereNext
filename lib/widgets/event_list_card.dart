@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../pages/event_page.dart';
 
@@ -50,22 +53,39 @@ class EventCard extends StatefulWidget {
 //
   }
 
-//  _removeEvent() {
-//    print('remove event');
-//    remove = true;
-//  }
-
-//  _leaveEvent() {
-//    print('remove event');
-//    leave = true;
-//  }
 
   confirm(BuildContext context, String action, String title) async {
+    var retVal;
     return showDialog(
         context: context,
         barrierDismissible: true,
         builder: (BuildContext context) {
-          return AlertDialog(
+          Platform.isIOS?
+          retVal = CupertinoAlertDialog(
+            title: Text(title),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[Text('$_name')],
+              ),
+            ),
+            actions: <Widget>[
+              CupertinoButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Atšaukti"),
+              ),
+              CupertinoButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  if (action == "leave") {
+                    leaveConfirmed();
+                  } else
+                    removeConfirmed();
+                },
+                child: Text("Taip"),
+              )
+            ],
+          ):
+          retVal = AlertDialog(
             title: Text(title),
             content: SingleChildScrollView(
               child: ListBody(
@@ -89,6 +109,7 @@ class EventCard extends StatefulWidget {
               )
             ],
           );
+          return retVal;
         });
   }
 

@@ -72,12 +72,12 @@ class EventPageState extends State<EventPage>
   Future<String> createAlertDialog(BuildContext context) {
     TextEditingController editingController = TextEditingController();
     if (Platform.isIOS) {
-      return showCupertinoDialog(
+      return showDialog(
           context: context,
           builder: (context) {
             return CupertinoAlertDialog(
               title: Text('Naudotojo el. paštas:'),
-              content: TextField(
+              content: CupertinoTextField(
                 controller: editingController,
               ),
               actions: <Widget>[
@@ -91,7 +91,7 @@ class EventPageState extends State<EventPage>
               ],
             );
           });
-    }
+    } else
     return showDialog(
         context: context,
         builder: (context) {
@@ -131,6 +131,23 @@ class EventPageState extends State<EventPage>
             .document("įvykiai/" + widget._eventID + "/dalyviai/" + userId)
             .setData({"dalyvauja": true});
 
+      if(Platform.isIOS){
+        showCupertinoDialog(
+            context: context,
+            builder: (context) {
+              return CupertinoAlertDialog(
+                title: Text("Naudotojas sėkmingai pridėtas"),
+                actions: <Widget>[
+                  CupertinoDialogAction(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            });
+      } else
         showDialog(
             context: context,
             builder: (context) {
@@ -147,6 +164,23 @@ class EventPageState extends State<EventPage>
               );
             });
       } else {
+        Platform.isIOS?
+        showCupertinoDialog(
+            context: context,
+            builder: (context) {
+          return CupertinoAlertDialog(
+            title: Text(_warning),
+            actions: <Widget>[
+              CupertinoDialogAction(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              )
+            ],
+          );
+        })
+        :
         showDialog(
             context: context,
             builder: (context) {
@@ -169,7 +203,7 @@ class EventPageState extends State<EventPage>
             context: context,
             builder: (context) {
               return CupertinoAlertDialog(
-                title: Text('Naudotojo el. paštas:'),
+                title: Text('Naudotojas neturi teisės pridėti dalyvių'),
                 actions: <Widget>[
                   CupertinoDialogAction(
                     child: Text('OK'),

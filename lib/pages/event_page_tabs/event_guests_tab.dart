@@ -35,6 +35,7 @@ class EventGuestPageState extends State<EventGuestPage> {
                       children: snapshot.data.documents
                           .map((DocumentSnapshot document) {
                         return new EventGuestListCard(
+                            widget._eventID,
                             widget._currentUid,
                             widget._isAdmin,
                             document.documentID,
