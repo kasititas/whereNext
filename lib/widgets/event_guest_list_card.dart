@@ -1,8 +1,14 @@
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wherenextapp/pages/home_page.dart';
+import 'package:wherenextapp/services/database.dart';
+import 'package:wherenextapp/user.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class EventGuestListCard extends StatefulWidget {
   State<StatefulWidget> createState() => new EventGuestListCardState();
@@ -19,6 +25,8 @@ class EventGuestListCard extends StatefulWidget {
 class EventGuestListCardState extends State<EventGuestListCard> {
   String name;
   String email;
+  User _currentUser = User();
+
 
   get _guestUserID => widget._guestUserID;
 
@@ -26,6 +34,12 @@ class EventGuestListCardState extends State<EventGuestListCard> {
   void initState() {
     super.initState();
     getGuestUserData();
+    getCurrentUser();
+  }
+
+  Future<void> getCurrentUser() async {
+    FirebaseUser _firebaseUser = await _auth.currentUser();
+    _currentUser = await OurDatabase().getUserInfo(_firebaseUser.uid);
   }
 
   ///Gets a list of guests from the database
@@ -151,7 +165,7 @@ class EventGuestListCardState extends State<EventGuestListCard> {
             ),
           ),
           onTap: () async{
-            await confirm(context, action, "Tikrai norite palikti įvykį", widget._currentUid);
+            await confirmLeave(context, action, "Tikrai norite palikti įvykį", widget._currentUid);
             Navigator.pop(context);
           },
         );
@@ -181,6 +195,54 @@ class EventGuestListCardState extends State<EventGuestListCard> {
           },
         );
     }
+  }
+
+  confirmLeave(BuildContext context, String action, String title, String uid) async {
+    var retVal;
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          Platform.isIOS?
+          retVal = CupertinoAlertDialog(
+            title: Text(title),
+            actions: <Widget>[
+              CupertinoButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Atšaukti"),
+              ),
+              CupertinoButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  removeFromArray(uid);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => HomePage(null, _currentUser)),
+                  );
+                },
+                child: Text("Taip"),
+              )
+            ],
+          ):
+          retVal = AlertDialog(
+            title: Text(title),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Atšaukti"),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  removeFromArray(uid);
+                },
+                child: Text("Taip"),
+              )
+            ],
+          );
+          return retVal;
+        });
   }
 
   confirm(BuildContext context, String action, String title, String uid) async {
