@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/services.dart';
 import 'package:wherenextapp/menu_frame.dart';
+import 'package:wherenextapp/password-validator.dart';
 import 'package:wherenextapp/services/database.dart';
+import '../email-validator.dart';
 import '../user.dart';
 import 'home_page.dart';
 
@@ -142,15 +144,7 @@ class _CreateLoginState extends State<CreateLogin> {
                   email = textValue;
                 });
               },
-              validator: (emailValue) {
-                if (emailValue.isEmpty) {
-                  return 'Šis laukas privalomas';
-                }
-                if ((EmailValidator.validate(emailValue))) {
-                  return null;
-                }
-                return 'El. paštas negalimas';
-              },
+              validator: EmailFieldValidator.validate,
               decoration: InputDecoration(
                 errorStyle: TextStyle(
                   color: Colors.white,
@@ -178,15 +172,7 @@ class _CreateLoginState extends State<CreateLogin> {
                   password = textValue;
                 });
               },
-              validator: (pswValue) {
-                if (pswValue.isEmpty) {
-                  return 'Šis laukas privalomas';
-                }
-                if (pswValue.length < 8) {
-                  return 'Slaptažodis turi būti sudarytas iš 8 simbolių';
-                }
-                return null;
-              },
+              validator: PasswordValidator.validate,
               obscureText: true,
               decoration: InputDecoration(
                 errorStyle: TextStyle(

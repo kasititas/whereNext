@@ -8,6 +8,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:wherenextapp/services/database.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
+import '../email-validator.dart';
+import '../password-validator.dart';
 import '../user.dart';
 import 'home_page.dart';
 
@@ -210,15 +212,7 @@ class _State extends State<SignIn> {
                       email = textVal;
                     });
                   },
-                  validator: (emailValue) {
-                    if (emailValue.isEmpty) {
-                      return 'Laukas tuščias';
-                    }
-                    if ((EmailValidator.validate(emailValue))) {
-                      return null;
-                    }
-                    return 'El. laiškas negalimas';
-                  },
+                  validator: EmailFieldValidator.validate,
                   decoration: InputDecoration(
                     errorStyle: TextStyle(
                       color: Colors.white,
@@ -246,12 +240,7 @@ class _State extends State<SignIn> {
                       password = textVal;
                     });
                   },
-                  validator: (nameValue) {
-                    if (nameValue.isEmpty) {
-                      return 'Laukas tuščias';
-                    }
-                    return null;
-                  },
+                  validator: PasswordValidator.validate,
                   obscureText: true,
                   decoration: InputDecoration(
                     errorStyle: TextStyle(
